@@ -386,6 +386,66 @@ document.addEventListener('keydown', function(e) {
 });
 
 // ================================
+// Gestos táctiles para pantalla completa
+// ================================
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+
+function initFullscreenTouchGestures() {
+    const fullscreenContainer = document.getElementById('fullscreenSlides');
+    if (!fullscreenContainer) return;
+    
+    fullscreenContainer.addEventListener('touchstart', function(e) {
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+    
+    fullscreenContainer.addEventListener('touchend', function(e) {
+        touchEndX = e.changedTouches[0].screenX;
+        touchEndY = e.changedTouches[0].screenY;
+        handleFullscreenSwipe();
+    }, { passive: true });
+}
+
+function handleFullscreenSwipe() {
+    if (!isFullscreenMode) return;
+    
+    // Detectar si estamos en modo rotado (portrait)
+    const isRotated = window.matchMedia('(max-width: 768px) and (orientation: portrait)').matches;
+    
+    let deltaX = touchEndX - touchStartX;
+    let deltaY = touchEndY - touchStartY;
+    
+    // En modo rotado, intercambiar ejes (el swipe vertical en pantalla es horizontal en contenido rotado)
+    if (isRotated) {
+        const temp = deltaX;
+        deltaX = -deltaY;
+        deltaY = temp;
+    }
+    
+    const minSwipeDistance = 50;
+    const maxVerticalMovement = 100;
+    
+    // Solo procesar swipes horizontales significativos
+    if (Math.abs(deltaX) > minSwipeDistance && Math.abs(deltaY) < maxVerticalMovement) {
+        if (deltaX > 0) {
+            // Swipe derecha -> diapositiva anterior
+            prevSlide();
+        } else {
+            // Swipe izquierda -> diapositiva siguiente
+            nextSlide();
+        }
+    }
+}
+
+// Inicializar gestos cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    initFullscreenTouchGestures();
+});
+
+// ================================
 // Modal de Juegos
 // ================================
 function openGameModal(topicId) {

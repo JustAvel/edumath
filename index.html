@@ -175,15 +175,17 @@
             <button class="modal-close" onclick="closeContentModal()">
                 <i class="fas fa-times"></i>
             </button>
-            <!-- Botón de pantalla completa -->
-            <button class="fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreenSlide()" title="Pantalla completa">
-                <i class="fas fa-expand"></i>
-            </button>
             <div class="content-container">
                 <h2 id="contentTitle">Título del Tema</h2>
                 <div class="content-body" id="contentBody">
                     <!-- Aquí se cargará el contenido dinámicamente -->
                 </div>
+                <!-- Botón de ver en horizontal -->
+                <button class="horizontal-view-btn" id="fullscreenBtn" onclick="toggleFullscreenSlide()" title="Ver en horizontal">
+                    <i class="fas fa-mobile-alt"></i>
+                    <i class="fas fa-sync-alt rotate-icon"></i>
+                    <span>Ver horizontal</span>
+                </button>
                 <div class="content-navigation">
                     <button class="btn btn-secondary" id="prevSlide" onclick="prevSlide()">
                         <i class="fas fa-chevron-left"></i> Anterior
