@@ -311,6 +311,7 @@ function nextSlide() {
     if (currentSlide < topic.count - 1) {
         currentSlide++;
         updateSlide();
+        updateFullscreenSlide();
     }
 }
 
@@ -318,8 +319,71 @@ function prevSlide() {
     if (currentSlide > 0) {
         currentSlide--;
         updateSlide();
+        updateFullscreenSlide();
     }
 }
+
+// ================================
+// Modo Pantalla Completa para Diapositivas
+// ================================
+let isFullscreenMode = false;
+
+function toggleFullscreenSlide() {
+    const fullscreenContainer = document.getElementById('fullscreenSlides');
+    
+    if (!isFullscreenMode) {
+        // Activar pantalla completa
+        isFullscreenMode = true;
+        fullscreenContainer.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        updateFullscreenSlide();
+    } else {
+        closeFullscreenSlide();
+    }
+}
+
+function closeFullscreenSlide() {
+    const fullscreenContainer = document.getElementById('fullscreenSlides');
+    isFullscreenMode = false;
+    fullscreenContainer.classList.remove('active');
+}
+
+function updateFullscreenSlide() {
+    if (!isFullscreenMode) return;
+    
+    const topic = slidesConfig[currentTopic];
+    if (!topic) return;
+    
+    const slideNumber = currentSlide + 1;
+    const imagePath = `${topic.folder}slide${slideNumber}.${topic.extension}`;
+    
+    // Actualizar imagen
+    const fullscreenImage = document.getElementById('fullscreenImage');
+    if (fullscreenImage) {
+        fullscreenImage.src = imagePath;
+        fullscreenImage.alt = `Diapositiva ${slideNumber}`;
+    }
+    
+    // Actualizar indicador
+    const indicator = document.getElementById('fullscreenIndicator');
+    if (indicator) {
+        indicator.textContent = `${slideNumber} / ${topic.count}`;
+    }
+    
+    // Actualizar estado de botones de navegación
+    const prevBtn = document.querySelector('.fullscreen-prev');
+    const nextBtn = document.querySelector('.fullscreen-next');
+    
+    if (prevBtn) prevBtn.disabled = currentSlide === 0;
+    if (nextBtn) nextBtn.disabled = currentSlide === topic.count - 1;
+}
+
+// Cerrar pantalla completa con tecla Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && isFullscreenMode) {
+        closeFullscreenSlide();
+    }
+});
 
 // ================================
 // Modal de Juegos

@@ -175,6 +175,10 @@
             <button class="modal-close" onclick="closeContentModal()">
                 <i class="fas fa-times"></i>
             </button>
+            <!-- Botón de pantalla completa -->
+            <button class="fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreenSlide()" title="Pantalla completa">
+                <i class="fas fa-expand"></i>
+            </button>
             <div class="content-container">
                 <h2 id="contentTitle">Título del Tema</h2>
                 <div class="content-body" id="contentBody">
@@ -191,6 +195,23 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Visor de diapositivas en pantalla completa -->
+    <div class="fullscreen-slides" id="fullscreenSlides">
+        <button class="fullscreen-close" onclick="closeFullscreenSlide()">
+            <i class="fas fa-times"></i>
+        </button>
+        <button class="fullscreen-nav fullscreen-prev" onclick="prevSlide()">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <div class="fullscreen-image-container">
+            <img id="fullscreenImage" src="" alt="Diapositiva">
+        </div>
+        <button class="fullscreen-nav fullscreen-next" onclick="nextSlide()">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+        <div class="fullscreen-indicator" id="fullscreenIndicator">1 / 5</div>
     </div>
 
     <!-- Modal de Juegos -->

@@ -3079,3 +3079,173 @@ body {
     height: 100%;
     object-fit: cover;
 }
+
+/* ================================
+   Botón de Pantalla Completa
+   ================================ */
+.fullscreen-btn {
+    position: absolute;
+    top: 70px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--border-radius-full);
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: var(--white);
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    z-index: 10;
+    transition: all var(--transition-fast);
+    box-shadow: 0 4px 15px rgba(26, 82, 118, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fullscreen-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(26, 82, 118, 0.4);
+}
+
+/* Mostrar botón principalmente en móviles */
+@media (min-width: 769px) {
+    .fullscreen-btn {
+        display: none;
+    }
+}
+
+/* ================================
+   Visor de Diapositivas Pantalla Completa
+   ================================ */
+.fullscreen-slides {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.fullscreen-slides.active {
+    display: flex;
+}
+
+.fullscreen-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--border-radius-full);
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--white);
+    border: none;
+    cursor: pointer;
+    font-size: 1.3rem;
+    z-index: 10;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fullscreen-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.fullscreen-image-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 60px;
+}
+
+.fullscreen-image-container img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.fullscreen-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 50px;
+    border-radius: var(--border-radius-full);
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--white);
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    z-index: 10;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fullscreen-nav:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.fullscreen-nav:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.fullscreen-nav:disabled:hover {
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.fullscreen-prev {
+    left: 10px;
+}
+
+.fullscreen-next {
+    right: 10px;
+}
+
+.fullscreen-indicator {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    color: var(--white);
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Ajustes para pantallas muy pequeñas */
+@media (max-width: 480px) {
+    .fullscreen-nav {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+    
+    .fullscreen-prev {
+        left: 5px;
+    }
+    
+    .fullscreen-next {
+        right: 5px;
+    }
+    
+    .fullscreen-image-container {
+        padding: 10px 50px;
+    }
+}
