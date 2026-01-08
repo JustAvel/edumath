@@ -1029,6 +1029,9 @@ body {
 .topic-toggle {
     width: 42px;
     height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    flex-shrink: 0;
     border-radius: var(--border-radius-full);
     background: linear-gradient(135deg, rgba(52, 152, 219, 0.1), rgba(155, 89, 182, 0.1));
     border: 2px solid var(--primary-color);
@@ -1453,6 +1456,17 @@ body {
     transform: translateX(100%);
     transition: transform var(--transition-normal);
     box-shadow: -10px 0 40px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+/* En horizontal móvil, modal ocupa toda la pantalla */
+@media (max-height: 500px) and (orientation: landscape) {
+    .content-modal {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 0;
+        height: 100vh;
+    }
 }
 
 /* Fondo semitransparente del modal para ver la sección detrás */
@@ -2035,6 +2049,15 @@ body {
         display: flex;
     }
     
+    /* Sidebar footer más arriba en móvil */
+    .sidebar-footer {
+        position: absolute;
+        bottom: 80px;
+        left: 0;
+        right: 0;
+        padding: var(--spacing-md) var(--spacing-lg);
+    }
+    
     .main-content {
         margin-left: 0;
         padding: var(--spacing-lg);
@@ -2122,6 +2145,12 @@ body {
     
     .quick-stats {
         grid-template-columns: 1fr;
+    }
+    
+    /* Tarjeta de estrellas a ancho completo en móvil */
+    .quick-stats .stat-card {
+        max-width: 100% !important;
+        width: 100%;
     }
     
     .professors-container {
@@ -2839,39 +2868,79 @@ body {
 /* Responsive para móviles */
 @media (max-width: 768px) {
     .shepherd-theme-edumath .shepherd-element {
-        max-width: 92vw;
+        max-width: 88vw;
+        margin: 0 auto;
+        font-size: 0.85rem;
+    }
+    
+    .shepherd-theme-edumath .shepherd-element::before {
+        height: 5px;
     }
     
     .shepherd-theme-edumath .shepherd-header {
-        padding: 22px 22px 10px 22px;
+        padding: 14px 14px 6px 14px;
     }
     
     .shepherd-theme-edumath .shepherd-title {
-        font-size: 1.25rem;
+        font-size: 1rem;
     }
     
     .shepherd-theme-edumath .shepherd-text {
-        font-size: 1rem;
-        padding: 16px 22px 20px 22px;
-        min-height: 60px;
+        font-size: 0.85rem;
+        padding: 10px 14px 12px 14px;
+        min-height: 40px;
+        line-height: 1.5;
     }
     
     .shepherd-theme-edumath .shepherd-footer {
-        padding: 16px 22px 20px 22px;
+        padding: 10px 14px 14px 14px;
         flex-wrap: wrap;
+        gap: 8px;
     }
     
     .shepherd-theme-edumath .shepherd-button {
-        padding: 12px 20px;
-        font-size: 0.9rem;
+        padding: 8px 14px;
+        font-size: 0.8rem;
     }
     
     .shepherd-theme-edumath .shepherd-cancel-icon {
-        top: 14px;
-        right: 14px;
-        width: 32px;
-        height: 32px;
-        font-size: 1.5rem;
+        top: 8px;
+        right: 8px;
+        width: 26px;
+        height: 26px;
+        font-size: 1.1rem;
+    }
+}
+
+/* Estilos para orientación horizontal en móviles */
+@media (max-height: 500px) and (orientation: landscape) {
+    .shepherd-theme-edumath .shepherd-element {
+        max-width: 60vw;
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+    
+    .shepherd-theme-edumath .shepherd-header {
+        padding: 10px 12px 4px 12px;
+    }
+    
+    .shepherd-theme-edumath .shepherd-title {
+        font-size: 0.9rem;
+    }
+    
+    .shepherd-theme-edumath .shepherd-text {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        min-height: 30px;
+    }
+    
+    .shepherd-theme-edumath .shepherd-footer {
+        padding: 8px 12px 10px 12px;
+    }
+    
+    .shepherd-theme-edumath .shepherd-button {
+        padding: 6px 12px;
+        font-size: 0.75rem;
     }
 }
 
@@ -2908,6 +2977,61 @@ body {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
+}
+
+/* Diapositivas en modo horizontal para móviles */
+@media (max-height: 500px) and (orientation: landscape) {
+    .content-modal {
+        padding: var(--spacing-sm);
+    }
+    
+    .content-header {
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+    
+    .content-header h2 {
+        font-size: 0.9rem;
+    }
+    
+    .content-container {
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+    
+    .slides-viewer {
+        height: calc(100vh - 80px);
+    }
+    
+    .slides-container {
+        flex: 1;
+        min-height: 0;
+        height: 100%;
+    }
+    
+    .slides-container img {
+        max-width: 100%;
+        max-height: calc(100vh - 120px);
+        width: auto;
+        height: auto;
+        object-fit: contain;
+    }
+    
+    .slides-thumbnails {
+        display: none;
+    }
+    
+    .content-navigation {
+        padding: var(--spacing-xs) 0;
+        gap: var(--spacing-xs);
+    }
+    
+    .content-navigation .btn {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-size: 0.75rem;
+    }
+    
+    .slide-indicator {
+        font-size: 0.75rem;
+    }
 }
 
 .slides-placeholder {
