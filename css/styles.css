@@ -3172,9 +3172,21 @@ body {
         margin-left: calc(-50vh);
     }
     
-    /* Ocultar botones de navegación en móvil rotado - usar gestos */
+    /* Mostrar botones de navegación en modo rotado */
     .fullscreen-slides.active .fullscreen-nav {
-        display: none;
+        display: flex;
+        width: 44px;
+        height: 44px;
+        font-size: 1.2rem;
+        background: rgba(0, 0, 0, 0.6);
+    }
+    
+    .fullscreen-slides.active .fullscreen-prev {
+        left: 8px;
+    }
+    
+    .fullscreen-slides.active .fullscreen-next {
+        right: 8px;
     }
     
     /* Indicador más visible en modo rotado */
@@ -3185,9 +3197,9 @@ body {
         background: rgba(0, 0, 0, 0.7);
     }
     
-    /* Añadir hint de swipe */
+    /* Hint de swipe como alternativa */
     .fullscreen-slides.active::after {
-        content: '← Desliza →';
+        content: 'Usa los botones o desliza';
         position: absolute;
         bottom: 55px;
         left: 50%;
@@ -3371,5 +3383,50 @@ body {
         top: 0;
         left: 0;
         margin: 0;
+    }
+    
+    /* Asegurar que los controles estén visibles en landscape */
+    .fullscreen-slides.active .fullscreen-nav {
+        display: flex;
+    }
+    
+    .fullscreen-slides.active .fullscreen-close {
+        display: flex;
+    }
+}
+
+/* Ajustes específicos para móviles en landscape */
+@media (max-width: 900px) and (orientation: landscape) {
+    .fullscreen-nav {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+        background: rgba(0, 0, 0, 0.5);
+    }
+    
+    .fullscreen-prev {
+        left: 8px;
+    }
+    
+    .fullscreen-next {
+        right: 8px;
+    }
+    
+    .fullscreen-close {
+        top: 8px;
+        right: 8px;
+        width: 40px;
+        height: 40px;
+        background: rgba(0, 0, 0, 0.5);
+    }
+    
+    .fullscreen-image-container {
+        padding: 50px 60px 60px;
+    }
+    
+    .fullscreen-indicator {
+        bottom: 10px;
+        padding: 6px 16px;
+        font-size: 0.85rem;
     }
 }

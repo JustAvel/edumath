@@ -346,6 +346,8 @@ function closeFullscreenSlide() {
     const fullscreenContainer = document.getElementById('fullscreenSlides');
     isFullscreenMode = false;
     fullscreenContainer.classList.remove('active');
+    // Restaurar el scroll del body
+    document.body.style.overflow = '';
 }
 
 function updateFullscreenSlide() {
