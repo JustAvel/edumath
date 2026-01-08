@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduMath - Aprende Matemáticas Jugando</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/games.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Shepherd.js para tutorial guiado -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shepherd.js@11.2.0/dist/css/shepherd.css">
+</head>
+<body>
+    <!-- Pantalla de carga -->
+    <div class="loader" id="loader">
+        <div class="loader-content">
+            <div class="loader-icon">
+                <img src="assets/img/utmach-logo.png" alt="UTMACH Logo" class="loader-logo">
+            </div>
+            <h2>EduMath</h2>
+            <p>Cargando...</p>
+            <div class="loader-bar">
+                <div class="loader-bar-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Login/Registro -->
+    <div class="modal" id="authModal">
+        <div class="modal-content auth-modal">
+            <button class="modal-close" onclick="closeAuthModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="auth-container">
+                <!-- Panel izquierdo decorativo -->
+                <div class="auth-side-panel">
+                    <div class="auth-side-content">
+                        <div class="auth-side-icon">
+                            <img src="assets/img/utmach-logo.png" alt="UTMACH" class="auth-utmach-logo">
+                        </div>
+                        <h2>EduMath</h2>
+                        <p>Aprende matemáticas de forma divertida</p>
+                        <div class="auth-side-features">
+                            <div class="auth-feature">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Contenido interactivo</span>
+                            </div>
+                            <div class="auth-feature">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Juegos educativos</span>
+                            </div>
+                            <div class="auth-feature">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Seguimiento de progreso</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Panel de formularios -->
+                <div class="auth-form-panel">
+                    <div class="auth-header">
+                        <h2 id="authTitle">¡Bienvenido de nuevo!</h2>
+                        <p id="authSubtitle">Ingresa tus datos para continuar</p>
+                    </div>
+                    
+                    <!-- Formulario de Login -->
+                    <form id="loginForm" class="auth-form">
+                        <div class="form-group">
+                            <div class="input-icon-wrapper">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="loginEmail" placeholder="Correo electrónico" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="input-icon-wrapper">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="loginPassword" placeholder="Contraseña" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-options">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="rememberMe">
+                                <span class="checkmark"></span>
+                                Recordarme
+                            </label>
+                            <a href="#" class="forgot-link">¿Olvidaste tu contraseña?</a>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block btn-login">
+                            Iniciar Sesión <i class="fas fa-arrow-right"></i>
+                        </button>
+                        <div class="divider">
+                            <span>o continúa con</span>
+                        </div>
+                        <div class="social-login">
+                            <button type="button" class="btn-social btn-google">
+                                <i class="fab fa-google"></i>
+                            </button>
+                            <button type="button" class="btn-social btn-facebook">
+                                <i class="fab fa-facebook-f"></i>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Formulario de Registro -->
+                    <form id="registerForm" class="auth-form hidden">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <div class="input-icon-wrapper">
+                                    <i class="fas fa-user"></i>
+                                    <input type="text" id="registerName" placeholder="Nombre completo" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="input-icon-wrapper">
+                                    <i class="fas fa-birthday-cake"></i>
+                                    <input type="number" id="registerAge" placeholder="Edad" min="10" max="99" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="input-icon-wrapper">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="registerEmail" placeholder="Correo electrónico" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="input-icon-wrapper">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="registerPassword" placeholder="Contraseña" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('registerPassword')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="input-icon-wrapper">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="registerConfirm" placeholder="Confirmar contraseña" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('registerConfirm')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-options">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="acceptTerms" required>
+                                <span class="checkmark"></span>
+                                Acepto los <a href="#" onclick="event.preventDefault(); openTermsModal();">términos y condiciones</a>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block btn-login">
+                            Crear cuenta <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </form>
+
+                    <div class="auth-switch">
+                        <p id="authSwitchText">¿No tienes cuenta?</p>
+                        <button class="btn btn-link" onclick="toggleAuthForm()">
+                            <span id="authSwitchBtn">Crear cuenta</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Contenido de Tema -->
+    <div class="modal" id="contentModal">
+        <div class="modal-content content-modal">
+            <button class="modal-close" onclick="closeContentModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="content-container">
+                <h2 id="contentTitle">Título del Tema</h2>
+                <div class="content-body" id="contentBody">
+                    <!-- Aquí se cargará el contenido dinámicamente -->
+                </div>
+                <div class="content-navigation">
+                    <button class="btn btn-secondary" id="prevSlide" onclick="prevSlide()">
+                        <i class="fas fa-chevron-left"></i> Anterior
+                    </button>
+                    <span class="slide-indicator" id="slideIndicator">1 / 5</span>
+                    <button class="btn btn-primary" id="nextSlide" onclick="nextSlide()">
+                        Siguiente <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Juegos -->
+    <div class="modal" id="gameModal">
+        <div class="modal-content game-modal">
+            <button class="modal-close" onclick="closeGameModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="game-container">
+                <h2 id="gameTitle">Juego del Tema</h2>
+                <div class="game-body" id="gameBody">
+                    <!-- Aquí se cargará el juego dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Términos y Condiciones -->
+    <div class="modal" id="termsModal">
+        <div class="modal-content terms-modal">
+            <button class="modal-close" onclick="closeTermsModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="terms-container">
+                <div class="terms-header">
+                    <i class="fas fa-file-contract"></i>
+                    <h2>Términos y Condiciones de Uso</h2>
+                    <p class="terms-date">Vigente desde: Enero 2026</p>
+                </div>
+                
+                <div class="terms-content">
+                    <section class="terms-section">
+                        <h3><i class="fas fa-info-circle"></i> 1. Introducción</h3>
+                        <p>Bienvenido a <strong>EduMath</strong>, una plataforma educativa desarrollada por estudiantes de la Universidad Técnica de Machala (UTMACH). Al acceder y utilizar esta plataforma, usted acepta cumplir con los siguientes términos y condiciones.</p>
+                    </section>
+                    
+                    <section class="terms-section">
+                        <h3><i class="fas fa-bullseye"></i> 2. Propósito de la Plataforma</h3>
+                        <p>EduMath es una herramienta educativa gratuita diseñada para:</p>
+                        <ul>
+                            <li>Facilitar el aprendizaje de matemáticas a través de contenido interactivo</li>
+                            <li>Proporcionar juegos educativos para reforzar conceptos matemáticos</li>
+                            <li>Ofrecer recursos didácticos sobre fracciones, operaciones y más</li>
+                        </ul>
+                    </section>
+                    
+                    <section class="terms-section">
+                        <h3><i class="fas fa-user-check"></i> 3. Registro y Cuenta de Usuario</h3>
+                        <ul>
+                            <li>Para acceder a ciertas funcionalidades, es necesario crear una cuenta</li>
+                            <li>Debe proporcionar información veraz y actualizada</li>
+                            <li>Es responsable de mantener la confidencialidad de su contraseña</li>
+                            <li>Debe notificar cualquier uso no autorizado de su cuenta</li>
+                        </ul>
+                    </section>
+                    
+                    <section class="terms-section">
+                        <h3><i class="fas fa-shield-alt"></i> 4. Privacidad y Protección de Datos</h3>
+                        <ul>
+                            <li>Recopilamos únicamente la información necesaria para el funcionamiento de la plataforma</li>
+                            <li>Su información personal no será compartida con terceros sin su consentimiento</li>
+                            <li>Los datos de progreso (estrellas, juegos completados) se almacenan localmente en su navegador</li>
+                            <li>Puede solicitar la eliminación de su cuenta y datos en cualquier momento</li>
+                        </ul>
+                    </section>
+                    
+                    <section class="terms-section">
+                        <h3><i class="fas fa-ban"></i> 5. Uso Aceptable</h3>
+                        <p>Al usar EduMath, usted se compromete a:</p>
+                        <ul>
+                            <li>Utilizar la plataforma únicamente con fines educativos</li>
+                            <li>No intentar acceder a áreas restringidas del sistema</li>
+                            <li>No distribuir contenido inapropiado o dañino</li>
+                            <li>Respetar los derechos de propiedad intelectual</li>
+                        </ul>
+                    </section>
+                    
+                    <section class="terms-section">
+                        <h3><i class="fas fa-copyright"></i> 6. Propiedad Intelectual</h3>
+                        <ul>
+                            <li>Todo el contenido de EduMath está protegido por derechos de autor</li>
+                            <li>Los materiales pueden usarse únicamente para aprendizaje personal</li>
+                            <li>Está prohibida la reproducción comercial sin autorización</li>
+                        </ul>
+                    </section>
+                    
+                    <section class="terms-section">
+                        <h3><i class="fas fa-exclamation-triangle"></i> 7. Limitación de Responsabilidad</h3>
+                        <ul>
+                            <li>EduMath se proporciona "tal cual" sin garantías de ningún tipo</li>
+                            <li>No garantizamos disponibilidad ininterrumpida del servicio</li>
+                            <li>No somos responsables por daños derivados del uso de la plataforma</li>
+                        </ul>
+                    </section>
+                    
+                    <section class="terms-section">
+                        <h3><i class="fas fa-edit"></i> 8. Modificaciones</h3>
+                        <p>Nos reservamos el derecho de modificar estos términos en cualquier momento. Los cambios serán notificados a través de la plataforma y entrarán en vigor inmediatamente después de su publicación.</p>
+                    </section>
+                    
+                    <section class="terms-section">
+                        <h3><i class="fas fa-envelope"></i> 9. Contacto</h3>
+                        <p>Para consultas sobre estos términos, puede contactarnos a través de:</p>
+                        <ul>
+                            <li><strong>Email:</strong> cabreraluiggi09@gmail.com</li>
+                            <li><strong>Email:</strong> justin.pg.avelino@gmail.com</li>
+                        </ul>
+                    </section>
+                    
+                    <section class="terms-section terms-footer">
+                        <p><i class="fas fa-university"></i> Desarrollado por estudiantes de la <strong>Universidad Técnica de Machala</strong></p>
+                        <p>&copy; 2026 EduMath. Todos los derechos reservados.</p>
+                    </section>
+                </div>
+                
+                <div class="terms-actions">
+                    <button class="btn btn-primary" onclick="closeTermsModal()">
+                        <i class="fas fa-check"></i> Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Información del Profesor -->
+    <div class="modal" id="professorModal">
+        <div class="modal-content professor-modal">
+            <button class="modal-close" onclick="closeProfessorModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="professor-full-info" id="professorFullInfo">
+                <!-- Contenido dinámico -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Ayuda/Tutorial -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content help-modal">
+            <button class="modal-close" onclick="closeHelpModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="help-container">
+                <h2><i class="fas fa-question-circle"></i> ¿Cómo usar EduMath?</h2>
+                <div class="help-steps">
+                    <div class="help-step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Inicia sesión o regístrate</h3>
+                            <p>Haz clic en el botón "Iniciar Sesión" para acceder con tu cuenta o crear una nueva.</p>
+                        </div>
+                    </div>
+                    <div class="help-step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>Explora los temas</h3>
+                            <p>En la sección "Temas de Estudio" encontrarás todos los temas disponibles. Haz clic en cualquier tema para expandirlo.</p>
+                        </div>
+                    </div>
+                    <div class="help-step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Aprende con el contenido</h3>
+                            <p>Cada tema tiene un botón "Contenido" que abrirá una ventana con diapositivas explicativas.</p>
+                        </div>
+                    </div>
+                    <div class="help-step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h3>Practica con los juegos</h3>
+                            <p>Después de estudiar, haz clic en "Juegos" para practicar lo aprendido de forma divertida.</p>
+                        </div>
+                    </div>
+                    <div class="help-step">
+                        <div class="step-number">5</div>
+                        <div class="step-content">
+                            <h3>¡Diviértete aprendiendo!</h3>
+                            <p>Recuerda que las matemáticas pueden ser muy divertidas. ¡No te rindas!</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="help-buttons">
+                    <button class="btn btn-secondary" onclick="startGuidedTour()">
+                        <i class="fas fa-route"></i> Iniciar Tour Guiado
+                    </button>
+                    <button class="btn btn-primary" onclick="closeHelpModal()">
+                        <i class="fas fa-thumbs-up"></i> ¡Entendido!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor Principal -->
+    <div class="app-container">
+        <!-- Sidebar / Menú lateral -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <img src="assets/img/utmach-logo.png" alt="UTMACH Logo" class="sidebar-logo">
+                <h1 class="sidebar-title">EduMath</h1>
+                <p class="sidebar-subtitle">UTMACH</p>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#inicio" class="nav-item active" data-section="inicio">
+                    <i class="fas fa-home"></i>
+                    <span>Inicio</span>
+                </a>
+                <a href="#temas" class="nav-item" data-section="temas">
+                    <i class="fas fa-book"></i>
+                    <span>Temas de Estudio</span>
+                </a>
+                <a href="#ayuda" class="nav-item" onclick="openHelpModal(); return false;">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Ayuda</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="btn btn-primary btn-block" id="authBtn" onclick="openAuthModal()">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Iniciar Sesión</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Botón para abrir/cerrar sidebar en móvil -->
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Botón de ayuda flotante -->
+        <button class="help-float" onclick="openHelpModal()">
+            <i class="fas fa-question"></i>
+        </button>
+
+        <!-- Contenido Principal -->
+        <main class="main-content">
+            <!-- Sección de Inicio -->
+            <section class="section" id="inicio">
+                <div class="welcome-banner">
+                    <div class="welcome-content">
+                        <h1>¡Bienvenido a EduMath! <span class="wave">👋</span></h1>
+                        <p>Aprende matemáticas de forma divertida y sencilla</p>
+                        <div class="welcome-features">
+                            <div class="feature-item">
+                                <i class="fas fa-gamepad"></i>
+                                <span>Juegos interactivos</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-book-open"></i>
+                                <span>Contenido visual</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-trophy"></i>
+                                <span>Aprende jugando</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-light btn-lg" onclick="scrollToSection('temas')">
+                            <i class="fas fa-rocket"></i> Comenzar a aprender
+                        </button>
+                    </div>
+                    <div class="welcome-illustration">
+                        <div class="math-icons">
+                            <span class="math-icon">+</span>
+                            <span class="math-icon">−</span>
+                            <span class="math-icon">×</span>
+                            <span class="math-icon">÷</span>
+                            <span class="math-icon">=</span>
+                            <span class="math-icon">π</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recursos disponibles -->
+                <div class="stats-section" id="recursosSection">
+                    <h3><i class="fas fa-boxes"></i> Recursos Disponibles</h3>
+                    <div class="quick-stats">
+                        <div class="stat-card">
+                            <div class="stat-icon stat-icon-1">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>7</h3>
+                                <p>Temas disponibles</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon stat-icon-2">
+                                <i class="fas fa-gamepad"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>14</h3>
+                                <p>Juegos interactivos</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tu Progreso -->
+                <div class="stats-section" id="progresoSection">
+                    <h3><i class="fas fa-chart-bar"></i> Tu Progreso</h3>
+                    <div class="quick-stats">
+                        <div class="stat-card" style="max-width: calc(50% - 0.75rem);">
+                            <div class="stat-icon stat-icon-3">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="totalStars">0</h3>
+                                <p>Estrellas ganadas</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tarjetas de Acceso Rápido -->
+                <div class="quick-access-section">
+                    <h3><i class="fas fa-bolt"></i> Acceso Rápido</h3>
+                    <div class="quick-access-cards">
+                        <!-- Último tema visto -->
+                        <div class="quick-access-card" id="lastTopicCard" style="display: none; cursor: pointer;" onclick="goToLastTopic()">
+                            <div class="quick-access-icon topic-icon-bg">
+                                <i class="fas fa-book-open"></i>
+                            </div>
+                            <div class="quick-access-content">
+                                <span class="quick-access-label">Último tema</span>
+                                <h4 id="lastTopicName">-</h4>
+                            </div>
+                            <button class="quick-access-btn">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Último juego jugado -->
+                        <div class="quick-access-card" id="lastGameCard" style="display: none; cursor: pointer;" onclick="goToLastGame()">
+                            <div class="quick-access-icon game-icon-bg">
+                                <i class="fas fa-gamepad"></i>
+                            </div>
+                            <div class="quick-access-content">
+                                <span class="quick-access-label">Último juego</span>
+                                <h4 id="lastGameName">-</h4>
+                            </div>
+                            <button class="quick-access-btn">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+
+                        <!-- Mensaje cuando no hay historial -->
+                        <div class="quick-access-empty" id="noHistoryMessage">
+                            <i class="fas fa-info-circle"></i>
+                            <p>Explora los temas y juegos para ver tu historial aquí</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección de Temas de Estudio -->
+            <section class="section hidden" id="temas">
+                <div class="section-header">
+                    <div class="section-header-title">
+                        <button class="btn-back" onclick="navigateTo('inicio')" title="Volver al inicio">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <h2><i class="fas fa-book"></i> Temas de Estudio</h2>
+                    </div>
+                    <p>Selecciona un tema para comenzar a aprender</p>
+                </div>
+
+                <div class="topics-layout">
+                    <div class="topics-container">
+                    <!-- Tema 1 -->
+                    <div class="topic-card" data-topic="1">
+                        <div class="topic-header" onclick="toggleTopic(1)">
+                            <div class="topic-info">
+                                <div class="topic-icon">
+                                    <i class="fas fa-sort-numeric-up"></i>
+                                </div>
+                                <div class="topic-title">
+                                    <h3>Sucesiones multiplicativas y con división</h3>
+                                    <span class="topic-badge">Tema 1</span>
+                                </div>
+                            </div>
+                            <div class="topic-toggle">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="topic-content">
+                            <p class="topic-description">Aprende a identificar y completar patrones numéricos usando multiplicación y división.</p>
+                            <div class="topic-actions">
+                                <button class="btn btn-primary" onclick="openContentModal(1)">
+                                    <i class="fas fa-book-open"></i> Contenido
+                                </button>
+                                <button class="btn btn-game" onclick="openGameModal(1)">
+                                    <i class="fas fa-gamepad"></i> Juega y aprende
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tema 2 -->
+                    <div class="topic-card" data-topic="2">
+                        <div class="topic-header" onclick="toggleTopic(2)">
+                            <div class="topic-info">
+                                <div class="topic-icon">
+                                    <i class="fas fa-pie-chart"></i>
+                                </div>
+                                <div class="topic-title">
+                                    <h3>Significado de la fracción</h3>
+                                    <span class="topic-badge">Tema 2</span>
+                                </div>
+                            </div>
+                            <div class="topic-toggle">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="topic-content">
+                            <p class="topic-description">Descubre qué son las fracciones y cómo representan partes de un todo.</p>
+                            <div class="topic-actions">
+                                <button class="btn btn-primary" onclick="openContentModal(2)">
+                                    <i class="fas fa-book-open"></i> Contenido
+                                </button>
+                                <button class="btn btn-game" onclick="openGameModal(2)">
+                                    <i class="fas fa-gamepad"></i> Juega y aprende
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tema 3 -->
+                    <div class="topic-card" data-topic="3">
+                        <div class="topic-header" onclick="toggleTopic(3)">
+                            <div class="topic-info">
+                                <div class="topic-icon">
+                                    <i class="fas fa-equals"></i>
+                                </div>
+                                <div class="topic-title">
+                                    <h3>Fracciones equivalentes</h3>
+                                    <span class="topic-badge">Tema 3</span>
+                                </div>
+                            </div>
+                            <div class="topic-toggle">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="topic-content">
+                            <p class="topic-description">Aprende a encontrar fracciones equivalentes usando amplificación y simplificación.</p>
+                            <div class="topic-actions">
+                                <button class="btn btn-primary" onclick="openContentModal(3)">
+                                    <i class="fas fa-book-open"></i> Contenido
+                                </button>
+                                <button class="btn btn-game" onclick="openGameModal(3)">
+                                    <i class="fas fa-gamepad"></i> Juega y aprende
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tema 4 -->
+                    <div class="topic-card" data-topic="4">
+                        <div class="topic-header" onclick="toggleTopic(4)">
+                            <div class="topic-info">
+                                <div class="topic-icon">
+                                    <i class="fas fa-greater-than"></i>
+                                </div>
+                                <div class="topic-title">
+                                    <h3>Relaciones de orden en fracciones</h3>
+                                    <span class="topic-badge">Tema 4</span>
+                                </div>
+                            </div>
+                            <div class="topic-toggle">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="topic-content">
+                            <p class="topic-description">Compara fracciones y aprende a ordenarlas de menor a mayor o viceversa.</p>
+                            <div class="topic-actions">
+                                <button class="btn btn-primary" onclick="openContentModal(4)">
+                                    <i class="fas fa-book-open"></i> Contenido
+                                </button>
+                                <button class="btn btn-game" onclick="openGameModal(4)">
+                                    <i class="fas fa-gamepad"></i> Juega y aprende
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tema 5 -->
+                    <div class="topic-card" data-topic="5">
+                        <div class="topic-header" onclick="toggleTopic(5)">
+                            <div class="topic-info">
+                                <div class="topic-icon">
+                                    <i class="fas fa-times"></i>
+                                </div>
+                                <div class="topic-title">
+                                    <h3>Múltiplos y divisores</h3>
+                                    <span class="topic-badge">Tema 5</span>
+                                </div>
+                            </div>
+                            <div class="topic-toggle">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="topic-content">
+                            <p class="topic-description">Identifica los múltiplos y divisores de un número de forma sencilla.</p>
+                            <div class="topic-actions">
+                                <button class="btn btn-primary" onclick="openContentModal(5)">
+                                    <i class="fas fa-book-open"></i> Contenido
+                                </button>
+                                <button class="btn btn-game" onclick="openGameModal(5)">
+                                    <i class="fas fa-gamepad"></i> Juega y aprende
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tema 6 -->
+                    <div class="topic-card" data-topic="6">
+                        <div class="topic-header" onclick="toggleTopic(6)">
+                            <div class="topic-info">
+                                <div class="topic-icon">
+                                    <i class="fas fa-divide"></i>
+                                </div>
+                                <div class="topic-title">
+                                    <h3>Criterios de divisibilidad</h3>
+                                    <span class="topic-badge">Tema 6</span>
+                                </div>
+                            </div>
+                            <div class="topic-toggle">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="topic-content">
+                            <p class="topic-description">Aprende trucos para saber si un número es divisible por 2, 3, 5 y más.</p>
+                            <div class="topic-actions">
+                                <button class="btn btn-primary" onclick="openContentModal(6)">
+                                    <i class="fas fa-book-open"></i> Contenido
+                                </button>
+                                <button class="btn btn-game" onclick="openGameModal(6)">
+                                    <i class="fas fa-gamepad"></i> Juega y aprende
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tema 7 -->
+                    <div class="topic-card" data-topic="7">
+                        <div class="topic-header" onclick="toggleTopic(7)">
+                            <div class="topic-info">
+                                <div class="topic-icon">
+                                    <i class="fas fa-ruler-combined"></i>
+                                </div>
+                                <div class="topic-title">
+                                    <h3>Unidades de área convencionales</h3>
+                                    <span class="topic-badge">Tema 7</span>
+                                </div>
+                            </div>
+                            <div class="topic-toggle">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="topic-content">
+                            <p class="topic-description">Conoce las unidades de medida de área y cómo convertir entre ellas.</p>
+                            <div class="topic-actions">
+                                <button class="btn btn-primary" onclick="openContentModal(7)">
+                                    <i class="fas fa-book-open"></i> Contenido
+                                </button>
+                                <button class="btn btn-game" onclick="openGameModal(7)">
+                                    <i class="fas fa-gamepad"></i> Juega y aprende
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                    <!-- Sidebar de Profesores -->
+                    <aside class="developers-sidebar">
+                        <div class="sidebar-card">
+                            <h3><i class="fas fa-chalkboard-teacher"></i> Profesores</h3>
+                            <div class="developer-mini">
+                                <div class="developer-avatar">
+                                    <i class="fas fa-user-graduate"></i>
+                                </div>
+                                <div class="developer-info">
+                                    <h4>Luiggi Cabrera</h4>
+                                    <p>Estudiante UTMACH</p>
+                                </div>
+                                <button class="btn-info-mini" onclick="openProfessorModal(1)" title="Ver más">
+                                    <i class="fas fa-info-circle"></i>
+                                </button>
+                            </div>
+                            <div class="developer-mini">
+                                <div class="developer-avatar">
+                                    <i class="fas fa-user-graduate"></i>
+                                </div>
+                                <div class="developer-info">
+                                    <h4>Justin Martínez</h4>
+                                    <p>Estudiante UTMACH</p>
+                                </div>
+                                <button class="btn-info-mini" onclick="openProfessorModal(2)" title="Ver más">
+                                    <i class="fas fa-info-circle"></i>
+                                </button>
+                            </div>
+                            <div class="sidebar-institution">
+                                <img src="assets/img/utmach-logo.png" alt="UTMACH" class="mini-logo">
+                                <span>Universidad Técnica de Machala</span>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="main-footer">
+                <div class="footer-content">
+                    <div class="footer-logo">
+                        <span>EduMath © 2025</span>
+                    </div>
+                    <div class="footer-text">
+                        <p>Desarrollado por estudiantes de la Universidad Técnica de Machala</p>
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Shepherd.js para tutorial guiado -->
+    <script src="https://cdn.jsdelivr.net/npm/shepherd.js@11.2.0/dist/js/shepherd.min.js"></script>
+    <!-- Phaser.js para juegos interactivos -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/games.js"></script>
+</body>
+</html>
