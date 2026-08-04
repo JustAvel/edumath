@@ -55,6 +55,117 @@ const slidesConfig = {
     }
 };
 
+// ================================
+// Animación "Inicio de Nivel" (transición estilo Candy Crush)
+// Se muestra como pantalla de carga al iniciar un juego específico,
+// combinando símbolos matemáticos con iconos de gamificación.
+// ================================
+const LEVEL_INTRO_MATH_ICONS = ['fa-plus', 'fa-minus', 'fa-percent', 'fa-divide', 'fa-square-root-alt', 'fa-infinity', 'fa-equals', 'fa-calculator'];
+const LEVEL_INTRO_GAME_ICONS = ['fa-star', 'fa-trophy', 'fa-medal', 'fa-gamepad', 'fa-bolt', 'fa-crown', 'fa-award', 'fa-dice'];
+const LEVEL_INTRO_HOLD_DURATION = 1300; // tiempo que el overlay permanece visible
+const LEVEL_INTRO_FADE_DURATION = 350;  // debe coincidir con la transición CSS del overlay
+let levelIntroTimeout = null;
+let levelIntroHiddenTimeout = null;
+
+function buildLevelIntroParticles(count, baseIcon) {
+    const iconPool = [
+        baseIcon || 'fa-star',
+        'fa-plus',
+        'fa-minus',
+        'fa-equals',
+        'fa-star',
+        'fa-bolt'
+    ];
+    // Reducimos las distancias en pantallas pequeñas para que las partículas
+    // sigan visibles sin salirse demasiado del contenedor.
+    const scale = Math.max(0.55, Math.min(1, window.innerWidth / 900));
+    // Zona "prohibida" alrededor del icono/título/subtítulo central: una elipse
+    // que las partículas deben rodear siempre, sin importar el ángulo.
+    const safeZoneWidth = 230 * scale;
+    const safeZoneHeight = 155 * scale;
+    let html = '';
+    for (let i = 0; i < count; i++) {
+        const angle = (i / count) * Math.PI * 2;
+        const wobble = ((i % 3) - 1) * 0.16;
+        const ringAngle = angle + wobble;
+
+        // Radio mínimo para quedar fuera de la zona segura, calculado sobre el
+        // ángulo REAL de la posición intermedia (ringAngle), no el de entrada.
+        const minRingRadius = 1 / Math.sqrt(
+            (Math.cos(ringAngle) / safeZoneWidth) ** 2 + (Math.sin(ringAngle) / safeZoneHeight) ** 2
+        );
+
+        // Punto de partida: lejos de la pantalla, entrando desde los bordes.
+        const distStart = (420 + (i % 5) * 45) * scale;
+        // Punto intermedio: siempre por fuera del texto central, con margen extra.
+        const distRing = minRingRadius + (90 + (i % 4) * 20) * scale;
+        // Punto final: se aleja hacia afuera mientras se desvanece.
+        const distOut = (380 + (i % 6) * 40) * scale;
+
+        const txIn = (Math.cos(angle) * distStart).toFixed(0);
+        const tyIn = (Math.sin(angle) * distStart).toFixed(0);
+
+        const txMid = (Math.cos(ringAngle) * distRing).toFixed(0);
+        const tyMid = (Math.sin(ringAngle) * distRing).toFixed(0);
+
+        const outAngle = ringAngle + ((i % 2 === 0 ? 1 : -1) * 0.7);
+        const txOut = (Math.cos(outAngle) * distOut).toFixed(0);
+        const tyOut = (Math.sin(outAngle) * distOut).toFixed(0);
+
+        const icon = iconPool[i % iconPool.length];
+        const duration = (1.35 + (i % 4) * 0.08).toFixed(2);
+        const delay = ((i % 6) * 0.04).toFixed(2);
+        const size = (2.2 + (i % 3) * 0.35).toFixed(2);
+        html += `<i class="fas ${icon} level-intro-particle" style="--tx-in:${txIn}px; --ty-in:${tyIn}px; --tx-mid:${txMid}px; --ty-mid:${tyMid}px; --tx-out:${txOut}px; --ty-out:${tyOut}px; animation-duration:${duration}s; animation-delay:${delay}s; font-size:${size}rem;"></i>`;
+    }
+    return html;
+}
+
+/**
+ * Muestra la animación de "inicio de nivel" y ejecuta onReveal() detrás del
+ * overlay para que el contenido/juego ya esté listo cuando la animación termine.
+ * @param {{icon: string, title: string, subtitle: string, badge: string}} config
+ * @param {Function} onReveal - callback que abre el contenido/juego real (se ejecuta mientras el overlay aún cubre la pantalla)
+ * @param {Function} [onHidden] - callback que se ejecuta justo cuando el overlay ya desapareció por completo
+ */
+function playLevelIntro(config, onReveal, onHidden) {
+    const overlay = document.getElementById('levelIntro');
+    if (!overlay) {
+        if (typeof onReveal === 'function') onReveal();
+        if (typeof onHidden === 'function') onHidden();
+        return;
+    }
+
+    clearTimeout(levelIntroTimeout);
+    clearTimeout(levelIntroHiddenTimeout);
+
+    document.getElementById('levelIntroIcon').innerHTML = `<i class="fas ${config.icon || 'fa-star'}"></i>`;
+    document.getElementById('levelIntroBadge').textContent = config.badge || '';
+    document.getElementById('levelIntroTitle').textContent = config.title || '¡Vamos!';
+    document.getElementById('levelIntroSubtitle').textContent = config.subtitle || '';
+    document.getElementById('levelIntroParticles').innerHTML = buildLevelIntroParticles(14, config.icon || 'fa-star');
+
+    // Reiniciar la animación (por si se abre un segundo juego justo después)
+    overlay.classList.remove('active');
+    void overlay.offsetWidth; // fuerza reflow para reiniciar los keyframes CSS
+    overlay.classList.add('active');
+
+    // El contenido real se abre detrás del overlay mientras la animación cubre la pantalla
+    setTimeout(() => {
+        if (typeof onReveal === 'function') onReveal();
+    }, 180);
+
+    // Al terminar la animación, se desvanece el overlay y queda visible el contenido
+    levelIntroTimeout = setTimeout(() => {
+        overlay.classList.remove('active');
+        // Esperamos a que termine la transición de desvanecimiento antes de avisar
+        // que el overlay ya no es visible (por ejemplo, para mostrar el tutorial).
+        levelIntroHiddenTimeout = setTimeout(() => {
+            if (typeof onHidden === 'function') onHidden();
+        }, LEVEL_INTRO_FADE_DURATION);
+    }, LEVEL_INTRO_HOLD_DURATION);
+}
+
 // Datos de los profesores
 const professorsData = {
     1: {
@@ -87,6 +198,18 @@ const professorsData = {
             email: "justin.pg.avelino@gmail.com",
             phone: "+593 96 781 5518",
             skills: ["Desarrollo Web", "Bases de Datos", "Gamificación", "UX/UI"]
+        }
+    },
+    3: {
+        name: "Ing. Sara Gabriela Cruz Naranjo",
+        role: "Docente Supervisora",
+        avatar: "fas fa-chalkboard-teacher",
+        // Coloca aquí manualmente la foto de la docente (assets/img/sara.png)
+        image: "assets/img/sara.png",
+        description: "Docente supervisora del proyecto EduMath en la Universidad Técnica de Machala.",
+        details: {
+            institution: "Universidad Técnica de Machala",
+            role: "Docente Supervisora del proyecto EduMath"
         }
     }
 };
@@ -229,21 +352,55 @@ function toggleTopic(topicId) {
 function openContentModal(topicId) {
     currentTopic = topicId;
     currentSlide = 0;
-    
+
     const topic = slidesConfig[topicId];
     if (!topic) return;
-    
+
     // Guardar como último tema visto
     saveLastTopic(topicId);
-    
+
     document.getElementById('contentTitle').textContent = topic.title;
     updateSlide();
-    
+
     document.getElementById('contentModal').classList.add('active');
     document.body.style.overflow = 'hidden';
 }
 
 // closeContentModal está definida al final del archivo
+
+function setSlideNavigationState() {
+    const topic = slidesConfig[currentTopic];
+    if (!topic) return;
+
+    const prevBtn = document.getElementById('prevSlide');
+    const nextBtn = document.getElementById('nextSlide');
+
+    const isFirstSlide = currentSlide === 0;
+    const isLastSlide = currentSlide >= topic.count - 1;
+
+    if (prevBtn) {
+        prevBtn.disabled = isFirstSlide;
+        prevBtn.setAttribute('aria-disabled', isFirstSlide ? 'true' : 'false');
+    }
+
+    if (nextBtn) {
+        nextBtn.disabled = isLastSlide;
+        nextBtn.setAttribute('aria-disabled', isLastSlide ? 'true' : 'false');
+    }
+
+    const fullscreenPrevBtn = document.querySelector('.fullscreen-prev');
+    const fullscreenNextBtn = document.querySelector('.fullscreen-next');
+
+    if (fullscreenPrevBtn) {
+        fullscreenPrevBtn.disabled = isFirstSlide;
+        fullscreenPrevBtn.setAttribute('aria-disabled', isFirstSlide ? 'true' : 'false');
+    }
+
+    if (fullscreenNextBtn) {
+        fullscreenNextBtn.disabled = isLastSlide;
+        fullscreenNextBtn.setAttribute('aria-disabled', isLastSlide ? 'true' : 'false');
+    }
+}
 
 function updateSlide() {
     const topic = slidesConfig[currentTopic];
@@ -258,7 +415,7 @@ function updateSlide() {
             <div class="slides-container">
                 <img src="${imagePath}" 
                      alt="Diapositiva ${slideNumber}" 
-                     onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'slides-placeholder\\'><i class=\\'fas fa-image\\'></i><p>Diapositiva no encontrada</p><p style=\\'font-size: 0.875rem; margin-top: 10px;\\'>Coloca tu imagen en:<br><code>${imagePath}</code></p></div>';">
+                     onerror="this.onerror=null; this.closest('.slides-container').innerHTML='<div class=\\'slides-placeholder\\'><i class=\\'fas fa-image\\'></i><p>Diapositiva no encontrada</p><p style=\\'font-size: 0.875rem; margin-top: 10px;\\'>Coloca tu imagen en:<br><code>${imagePath}</code></p></div>';">
             </div>
             <div class="slides-thumbnails" id="slidesThumbnails">
                 ${generateThumbnails(topic)}
@@ -271,8 +428,7 @@ function updateSlide() {
         `${slideNumber} / ${topic.count}`;
     
     // Actualizar botones de navegación
-    document.getElementById('prevSlide').disabled = currentSlide === 0;
-    document.getElementById('nextSlide').disabled = currentSlide === topic.count - 1;
+    setSlideNavigationState();
     
     // Actualizar thumbnail activo
     updateActiveThumbnail();
@@ -308,10 +464,14 @@ function goToSlide(index) {
 
 function nextSlide() {
     const topic = slidesConfig[currentTopic];
+    if (!topic) return;
+
     if (currentSlide < topic.count - 1) {
         currentSlide++;
         updateSlide();
         updateFullscreenSlide();
+    } else {
+        setSlideNavigationState();
     }
 }
 
@@ -320,6 +480,8 @@ function prevSlide() {
         currentSlide--;
         updateSlide();
         updateFullscreenSlide();
+    } else {
+        setSlideNavigationState();
     }
 }
 
@@ -453,9 +615,9 @@ document.addEventListener('DOMContentLoaded', function() {
 function openGameModal(topicId) {
     const topic = slidesConfig[topicId];
     if (!topic) return;
-    
+
     document.getElementById('gameTitle').textContent = `Juegos: ${topic.title}`;
-    
+
     // Mostrar selector de juegos (función definida en games.js)
     if (typeof renderGameSelector === 'function') {
         document.getElementById('gameBody').innerHTML = renderGameSelector(topicId);
@@ -467,7 +629,7 @@ function openGameModal(topicId) {
             </div>
         `;
     }
-    
+
     document.getElementById('gameModal').classList.add('active');
     document.body.style.overflow = 'hidden';
 }
@@ -516,20 +678,21 @@ function openProfessorModal(professorId) {
         <div class="professor-details">
             <h4><i class="fas fa-info-circle"></i> Información</h4>
             <ul>
-                <li><i class="fas fa-university"></i> ${professor.details.institution}</li>
+                ${professor.details.institution ? `<li><i class="fas fa-university"></i> ${professor.details.institution}</li>` : ''}
                 ${professor.details.career ? `<li><i class="fas fa-graduation-cap"></i> ${professor.details.career}</li>` : ''}
-                <li><i class="fas fa-briefcase"></i> ${professor.details.role}</li>
-                <li><i class="fas fa-map-marker-alt"></i> ${professor.details.location}</li>
-                <li><i class="fas fa-envelope"></i> <a href="mailto:${professor.details.email}" style="color: var(--primary-color); text-decoration: none;">${professor.details.email}</a></li>
-                <li><i class="fas fa-phone"></i> <a href="tel:${professor.details.phone.replace(/\s/g, '')}" style="color: var(--primary-color); text-decoration: none;">${professor.details.phone}</a></li>
+                ${professor.details.role ? `<li><i class="fas fa-briefcase"></i> ${professor.details.role}</li>` : ''}
+                ${professor.details.location ? `<li><i class="fas fa-map-marker-alt"></i> ${professor.details.location}</li>` : ''}
+                ${professor.details.email ? `<li><i class="fas fa-envelope"></i> <a href="mailto:${professor.details.email}" style="color: var(--primary-color); text-decoration: none;">${professor.details.email}</a></li>` : ''}
+                ${professor.details.phone ? `<li><i class="fas fa-phone"></i> <a href="tel:${professor.details.phone.replace(/\s/g, '')}" style="color: var(--primary-color); text-decoration: none;">${professor.details.phone}</a></li>` : ''}
             </ul>
             
+            ${professor.details.skills && professor.details.skills.length ? `
             <h4 style="margin-top: var(--spacing-lg);"><i class="fas fa-star"></i> Habilidades</h4>
             <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
                 ${professor.details.skills.map(skill => 
                     `<span style="background: var(--primary-pale); color: var(--primary-color); padding: 4px 12px; border-radius: 20px; font-size: 0.875rem;">${skill}</span>`
                 ).join('')}
-            </div>
+            </div>` : ''}
         </div>
     `;
     

@@ -3533,6 +3533,38 @@
     padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-lg);
     text-align: center;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.feedback-modal-header-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.feedback-modal-close {
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.feedback-modal-close:hover {
+    transform: rotate(90deg) scale(1.05);
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .feedback-modal.correct .feedback-modal-header {

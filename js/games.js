@@ -152,6 +152,52 @@ let gameTimer = null;
 let gameTimeLeft = 0;
 let gameLevel = 1;
 
+function shuffleArray(items) {
+    const shuffled = [...items];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
+function getRandomUniqueItem(items, usedKeys = [], getKey = (item) => item) {
+    const available = items.filter(item => !usedKeys.includes(getKey(item)));
+    if (available.length === 0) {
+        return null;
+    }
+    return available[Math.floor(Math.random() * available.length)];
+}
+
+function addRecentKey(recentKeys, key, maxItems = 8) {
+    recentKeys.push(key);
+    if (recentKeys.length > maxItems) {
+        recentKeys.shift();
+    }
+}
+
+function normalizeAnswer(value) {
+    return String(value ?? '').trim().replace(/\s+/g, ' ');
+}
+
+function areFractionsEquivalent(a, b) {
+    const [aNum, aDen] = String(a).split('/').map(Number);
+    const [bNum, bDen] = String(b).split('/').map(Number);
+
+    if (!Number.isFinite(aNum) || !Number.isFinite(aDen) || !Number.isFinite(bNum) || !Number.isFinite(bDen)) {
+        return false;
+    }
+
+    return aNum * bDen === bNum * aDen;
+}
+
+let recentSequenceKeys = [];
+let recentFractionKeys = [];
+let recentSortingSetKeys = [];
+let recentComparisonKeys = [];
+let recentAreaKeys = [];
+let recentConversionKeys = [];
+
 // ================================
 // Sistema de Tutoriales de Juegos
 // ================================
@@ -520,97 +566,92 @@ function markGameAsPlayed(gameId) {
 }
 
 // Mostrar tutorial del juego con Shepherd (interactivo en el juego real)
-function showGameTutorial(gameId, callback) {
+// Se invoca únicamente cuando el juego ya está visible (después de que la
+// pantalla de carga/animación de inicio haya desaparecido por completo).
+function showGameTutorial(gameId) {
     // Verificar que Shepherd esté disponible
     if (typeof Shepherd === 'undefined') {
-        console.warn('Shepherd.js no disponible, iniciando juego directamente');
-        if (callback) callback();
+        console.warn('Shepherd.js no disponible, no se mostrará el tutorial');
         return;
     }
 
     // Marcar como jugado de inmediato para evitar bucles
     markGameAsPlayed(gameId);
-    
-    // Iniciar el juego PRIMERO
-    if (callback) callback();
 
-    // Esperar a que el DOM del juego se renderice antes de mostrar tutorial
-    setTimeout(() => {
-        try {
-            // Pausar el timer mientras se muestra el tutorial
-            let timerWasPausedForTutorial = false;
-            let savedTimeLeft = 0;
-            
-            if (gameTimer) {
-                clearInterval(gameTimer);
-                gameTimer = null;
-                savedTimeLeft = gameTimeLeft;
-                timerWasPausedForTutorial = true;
-            }
-            
-            const tutorialTour = new Shepherd.Tour({
-                useModalOverlay: true,
-                defaultStepOptions: {
-                    cancelIcon: { enabled: true },
-                    classes: 'shepherd-theme-edumath',
-                    scrollTo: { behavior: 'smooth', block: 'center' }
-                }
-            });
+    try {
+        // Pausar el timer mientras se muestra el tutorial
+        let timerWasPausedForTutorial = false;
+        let savedTimeLeft = 0;
 
-            // Configurar pasos según el juego
-            const steps = getTutorialStepsForGame(gameId);
-            if (!steps || steps.length === 0) {
-                console.warn(`No hay pasos de tutorial para gameId: ${gameId}`);
-                // Reanudar timer si no hay tutorial
-                if (timerWasPausedForTutorial && savedTimeLeft > 0) {
-                    startGameTimer(savedTimeLeft, gameTimerCallback);
-                }
-                return;
-            }
-
-            steps.forEach((step, index) => {
-                tutorialTour.addStep({
-                    id: step.id,
-                    text: `<div class="shepherd-title">${step.title}</div><div class="shepherd-text">${step.text}</div>`,
-                    attachTo: step.attachTo ? { element: step.attachTo, on: step.position || 'bottom' } : undefined,
-                    buttons: index === steps.length - 1 
-                        ? [
-                            { text: '← Anterior', action: tutorialTour.back, classes: 'shepherd-button-secondary' },
-                            { text: '¡Entendido! 🎮', action: () => tutorialTour.complete(), classes: 'shepherd-button-primary' }
-                        ]
-                        : index === 0
-                        ? [{ text: 'Siguiente →', action: tutorialTour.next, classes: 'shepherd-button-primary' }]
-                        : [
-                            { text: '← Anterior', action: tutorialTour.back, classes: 'shepherd-button-secondary' },
-                            { text: 'Siguiente →', action: tutorialTour.next, classes: 'shepherd-button-primary' }
-                        ]
-                });
-            });
-
-            // Función para reanudar el timer
-            const resumeTimerAfterTutorial = () => {
-                if (timerWasPausedForTutorial && savedTimeLeft > 0) {
-                    startGameTimer(savedTimeLeft, gameTimerCallback);
-                }
-            };
-
-            tutorialTour.on('complete', () => {
-                if (typeof showToast === 'function') {
-                    showToast('¡Tutorial completado! Ya puedes jugar.', 'success');
-                }
-                resumeTimerAfterTutorial();
-            });
-            
-            // También reanudar si el usuario cancela/cierra el tutorial
-            tutorialTour.on('cancel', () => {
-                resumeTimerAfterTutorial();
-            });
-
-            tutorialTour.start();
-        } catch (error) {
-            console.error('Error al iniciar tutorial:', error);
+        if (gameTimer) {
+            clearInterval(gameTimer);
+            gameTimer = null;
+            savedTimeLeft = gameTimeLeft;
+            timerWasPausedForTutorial = true;
         }
-    }, 800);
+
+        const tutorialTour = new Shepherd.Tour({
+            useModalOverlay: true,
+            defaultStepOptions: {
+                cancelIcon: { enabled: true },
+                classes: 'shepherd-theme-edumath',
+                scrollTo: { behavior: 'smooth', block: 'center' }
+            }
+        });
+
+        // Configurar pasos según el juego
+        const steps = getTutorialStepsForGame(gameId);
+        if (!steps || steps.length === 0) {
+            console.warn(`No hay pasos de tutorial para gameId: ${gameId}`);
+            // Reanudar timer si no hay tutorial
+            if (timerWasPausedForTutorial && savedTimeLeft > 0) {
+                startGameTimer(savedTimeLeft, gameTimerCallback);
+            }
+            return;
+        }
+
+        steps.forEach((step, index) => {
+            tutorialTour.addStep({
+                id: step.id,
+                text: `<div class="shepherd-title">${step.title}</div><div class="shepherd-text">${step.text}</div>`,
+                attachTo: step.attachTo ? { element: step.attachTo, on: step.position || 'bottom' } : undefined,
+                buttons: index === steps.length - 1
+                    ? [
+                        { text: '← Anterior', action: tutorialTour.back, classes: 'shepherd-button-secondary' },
+                        { text: '¡Entendido! 🎮', action: () => tutorialTour.complete(), classes: 'shepherd-button-primary' }
+                    ]
+                    : index === 0
+                    ? [{ text: 'Siguiente →', action: tutorialTour.next, classes: 'shepherd-button-primary' }]
+                    : [
+                        { text: '← Anterior', action: tutorialTour.back, classes: 'shepherd-button-secondary' },
+                        { text: 'Siguiente →', action: tutorialTour.next, classes: 'shepherd-button-primary' }
+                    ]
+            });
+        });
+
+        // Función para reanudar el timer
+        const resumeTimerAfterTutorial = () => {
+            if (timerWasPausedForTutorial && savedTimeLeft > 0) {
+                startGameTimer(savedTimeLeft, gameTimerCallback);
+            }
+        };
+
+        tutorialTour.on('complete', () => {
+            if (typeof showToast === 'function') {
+                showToast('¡Tutorial completado! Ya puedes jugar.', 'success');
+            }
+            resumeTimerAfterTutorial();
+        });
+
+        // También reanudar si el usuario cancela/cierra el tutorial
+        tutorialTour.on('cancel', () => {
+            resumeTimerAfterTutorial();
+        });
+
+        tutorialTour.start();
+    } catch (error) {
+        console.error('Error al iniciar tutorial:', error);
+    }
 }
 
 // Obtener pasos del tutorial según el juego
@@ -1044,7 +1085,7 @@ function getTutorialStepsForGame(gameId) {
 // Mostrar tutorial desde botón de ayuda
 function showGameHelp() {
     if (currentGame && currentGame.gameId) {
-        showGameTutorial(currentGame.gameId, null);
+        showGameTutorial(currentGame.gameId);
     }
 }
 
@@ -1089,37 +1130,48 @@ function startGame(topicId, gameId) {
     currentGame = { topicId, gameId };
     gameScore = 0;
     gameLevel = 1;
-    
+
+    const gameInfo = gamesConfig[topicId]?.games.find(g => g.id === gameId);
+    const gameName = gameInfo?.name || 'Juego';
+    const gameIcon = gameInfo?.icon && gameInfo.icon.startsWith('fa-') ? gameInfo.icon : 'fa-gamepad';
+
     // Guardar como último juego jugado
-    const gameName = gamesConfig[topicId]?.games[gameId]?.name || 'Juego';
     if (typeof saveLastGame === 'function') {
         saveLastGame(topicId, gameId, gameName);
     }
-    
+
     const gameBody = document.getElementById('gameBody');
-    
-    // Función para inicializar el juego
-    const initializeGame = () => {
-        // Mostrar pantalla de carga
+    const firstTime = isFirstTimeGame(gameId);
+
+    const launch = () => launchGame(gameId, topicId);
+
+    // El tutorial (si corresponde) debe aparecer justo cuando la pantalla de
+    // carga ya haya desaparecido, nunca mientras todavía es visible.
+    const afterIntro = () => {
+        if (firstTime) {
+            showGameTutorial(gameId);
+        }
+    };
+
+    // Pantalla de carga: animación "inicio de nivel" al darle a jugar
+    if (typeof playLevelIntro === 'function') {
+        playLevelIntro({
+            icon: gameIcon,
+            badge: 'Cargando juego',
+            title: gameName,
+            subtitle: '¡Prepárate para jugar y aprender!'
+        }, launch, afterIntro);
+    } else {
         gameBody.innerHTML = `
             <div class="game-loading">
                 <i class="fas fa-spinner fa-spin"></i>
                 <p>Cargando juego...</p>
             </div>
         `;
-        
-        // Lanzar el juego después de un breve delay
         setTimeout(() => {
-            launchGame(gameId, topicId);
+            launch();
+            afterIntro();
         }, 300);
-    };
-    
-    // Verificar si es primera vez
-    if (isFirstTimeGame(gameId)) {
-        window.pendingGameStart = initializeGame;
-        showGameTutorial(gameId, initializeGame);
-    } else {
-        initializeGame();
     }
 }
 
@@ -1348,7 +1400,7 @@ function backToGameSelector() {
 function showFeedbackModal(options) {
     const {
         isCorrect = true,
-        title = isCorrect ? '¡Correcto!' : '¡Incorrecto!',
+        title = isCorrect ? '¡Correcto!' : 'Ups, sigue intentando',
         message = '',
         correctAnswer = '',
         userAnswer = '',
@@ -1421,27 +1473,23 @@ function showFeedbackModal(options) {
         `;
     }
     
-    // Botón de continuar
-    const buttonText = isCorrect ? '¡Continuar!' : 'Entendido, continuar';
-    const buttonIcon = isCorrect ? 'fa-arrow-right' : 'fa-redo';
-    
     overlay.innerHTML = `
         <div class="feedback-modal ${isCorrect ? 'correct' : 'incorrect'}">
             <div class="feedback-modal-header">
                 <div class="feedback-modal-icon">
-                    <i class="fas ${isCorrect ? 'fa-check' : 'fa-times'}"></i>
+                    <i class="fas ${isCorrect ? 'fa-check' : 'fa-redo-alt'}"></i>
                 </div>
-                <h3 class="feedback-modal-title">${title}</h3>
-                ${pointsHTML}
+                <div class="feedback-modal-header-content">
+                    <h3 class="feedback-modal-title">${title}</h3>
+                    ${pointsHTML}
+                </div>
+                <button class="feedback-modal-close" id="feedbackCloseBtn" type="button" aria-label="Cerrar retroalimentación">
+                    <i class="fas fa-times"></i>
+                </button>
                 ${autoClose && isCorrect ? '<div class="feedback-auto-close-bar"></div>' : ''}
             </div>
             <div class="feedback-modal-body">
                 ${bodyContent}
-            </div>
-            <div class="feedback-modal-actions">
-                <button class="feedback-modal-btn" id="feedbackContinueBtn">
-                    ${buttonText} <i class="fas ${buttonIcon}"></i>
-                </button>
             </div>
         </div>
     `;
@@ -1466,10 +1514,10 @@ function showFeedbackModal(options) {
         }, 250);
     };
     
-    // Event listener para el botón
-    const continueBtn = document.getElementById('feedbackContinueBtn');
-    if (continueBtn) {
-        continueBtn.addEventListener('click', closeModal);
+    // Event listener para el botón de cierre
+    const closeBtn = document.getElementById('feedbackCloseBtn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
     }
     
     // Auto-cierre para respuestas correctas
@@ -1477,14 +1525,11 @@ function showFeedbackModal(options) {
         setTimeout(closeModal, autoCloseDelay);
     }
     
-    // También permitir cerrar con click en overlay (solo para correctas)
-    if (isCorrect) {
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
-                closeModal();
-            }
-        });
-    }
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            closeModal();
+        }
+    });
 }
 
 /**
@@ -1659,13 +1704,10 @@ function generateSequencePop() {
     }
     
     // Seleccionar una secuencia aleatoria
-    const selected = availableSequences[Math.floor(Math.random() * availableSequences.length)];
+    const selected = getRandomUniqueItem(availableSequences, recentSequences, (s) => `${s.start}-${s.factor}-${s.type}`) || availableSequences[0];
     
-    // Agregar al historial de recientes (máximo 10)
-    recentSequences.push(selected.start + '-' + selected.factor + '-' + selected.type);
-    if (recentSequences.length > 10) {
-        recentSequences.shift();
-    }
+    // Agregar al historial de recientes (máximo 12)
+    addRecentKey(recentSequences, `${selected.start}-${selected.factor}-${selected.type}`, 12);
     
     const sequence = [...selected.seq];
     const isMultiplication = selected.type === 'mult';
@@ -1787,7 +1829,7 @@ function popSequenceBubble(bubble) {
         
         showFeedbackModal({
             isCorrect: false,
-            title: '¡No es correcto!',
+            title: 'Ups, sigue intentando',
             message: value > seqTarget 
                 ? `${value} es demasiado alto para esta secuencia.`
                 : `${value} es demasiado bajo para esta secuencia.`,
@@ -2231,9 +2273,18 @@ function generateFractionPop() {
         { n:7,d:8 }, { n:3,d:7 }, { n:4,d:9 }
     ];
 
-    // Seleccionar fracción objetivo aleatoria
-    const idx = Math.floor(Math.random() * allFractions.length);
-    popTarget = allFractions[idx];
+    const targetKey = `${popTarget?.n}/${popTarget?.d}`;
+    if (targetKey) {
+        addRecentKey(recentFractionKeys, targetKey, 6);
+    }
+
+    const availableTargets = allFractions.filter(f => !recentFractionKeys.includes(`${f.n}/${f.d}`));
+    if (availableTargets.length === 0) {
+        recentFractionKeys.length = 0;
+    }
+
+    const selectedTarget = getRandomUniqueItem(allFractions, recentFractionKeys, (f) => `${f.n}/${f.d}`);
+    popTarget = selectedTarget || allFractions[Math.floor(Math.random() * allFractions.length)];
 
     const targetEl = document.getElementById('popTargetFraction');
     targetEl.textContent = fractionToWords(popTarget.n, popTarget.d);
@@ -2242,13 +2293,12 @@ function generateFractionPop() {
     field.innerHTML = '';
 
     // Seleccionar 5 fracciones aleatorias diferentes a la correcta
-    const otherFractions = allFractions.filter(f => !(f.n === popTarget.n && f.d === popTarget.d));
-    const shuffledOthers = otherFractions.sort(() => Math.random() - 0.5).slice(0, 5);
+    const otherFractions = shuffleArray(allFractions.filter(f => !(f.n === popTarget.n && f.d === popTarget.d))).slice(0, 5);
     
     // Crear array con la correcta + 5 incorrectas y mezclar
-    const choices = [popTarget, ...shuffledOthers].sort(() => Math.random() - 0.5);
+    const choices = shuffleArray([popTarget, ...otherFractions]);
 
-    choices.forEach((f, i) => {
+    choices.forEach((f) => {
         const bubble = document.createElement('div');
         bubble.className = 'pop-bubble';
         bubble.style.background = `hsl(${Math.random()*360} , 70% , 60%)`;
@@ -2263,17 +2313,19 @@ function generateFractionPop() {
 function popBubble(bubble) {
     const n = parseInt(bubble.dataset.n,10);
     const d = parseInt(bubble.dataset.d,10);
-    const userVal = n / d;
-    const targetVal = popTarget.n / popTarget.d;
+    const userFraction = `${n}/${d}`;
+    const targetFraction = `${popTarget.n}/${popTarget.d}`;
+    const userValue = n / d;
+    const targetValue = popTarget.n / popTarget.d;
 
     bubble.classList.add('popped');
     setTimeout(() => bubble.remove(), 300);
 
-    if (Math.abs(userVal - targetVal) < 0.0001) {
+    if (areFractionsEquivalent(userFraction, targetFraction)) {
         updateScore(100);
         
         // Retroalimentación rápida para aciertos
-        showQuickFeedback(`¡Correcto! ${n}/${d}`, 100);
+        showQuickFeedback(`¡Correcto! ${userFraction}`, 100);
         
         // Continuar rápidamente
         setTimeout(generateFractionPop, 800);
@@ -2281,16 +2333,16 @@ function popBubble(bubble) {
         updateScore(-10);
         
         // Retroalimentación de error mejorada
-        const comparison = userVal > targetVal ? 'mayor' : 'menor';
+        const comparison = userValue > targetValue ? 'mayor' : 'menor';
         const targetWords = fractionToWords(popTarget.n, popTarget.d);
         
         showFeedbackModal({
             isCorrect: false,
             title: '¡No es esa!',
-            message: `La fracción ${n}/${d} es <strong>${comparison}</strong> que la que buscamos.`,
-            userAnswer: `${n}/${d}`,
-            correctAnswer: `${popTarget.n}/${popTarget.d}`,
-            explanation: `Buscamos "${targetWords}" que se escribe como <strong>${popTarget.n}/${popTarget.d}</strong>. Compara: ${n}/${d} = ${(userVal * 100).toFixed(0)}% mientras que ${popTarget.n}/${popTarget.d} = ${(targetVal * 100).toFixed(0)}% del total.`,
+            message: `La fracción ${userFraction} es <strong>${comparison}</strong> que la que buscamos.`,
+            userAnswer: userFraction,
+            correctAnswer: targetFraction,
+            explanation: `Buscamos "${targetWords}" que se escribe como <strong>${targetFraction}</strong>. Compara: ${userFraction} = ${(userValue * 100).toFixed(0)}% mientras que ${targetFraction} = ${(targetValue * 100).toFixed(0)}% del total.`,
             points: -10,
             autoClose: false,
             onContinue: generateFractionPop
@@ -2313,11 +2365,16 @@ function initMatchingGame() {
         { left: '2/3', right: '4/6' },
         { left: '1/4', right: '2/8' },
         { left: '3/4', right: '6/8' },
-        { left: '1/3', right: '2/6' }
+        { left: '1/3', right: '2/6' },
+        { left: '2/5', right: '4/10' },
+        { left: '3/5', right: '6/10' },
+        { left: '4/5', right: '8/10' }
     ];
     
-    const leftItems = equivalentPairs.map(p => p.left).sort(() => Math.random() - 0.5);
-    const rightItems = equivalentPairs.map(p => p.right).sort(() => Math.random() - 0.5);
+    const shuffledPairs = shuffleArray(equivalentPairs);
+    currentMatchingPairs = shuffledPairs;
+    const leftItems = shuffledPairs.map(p => p.left);
+    const rightItems = shuffleArray(shuffledPairs.map(p => p.right));
     
     gameBody.innerHTML = `
         ${renderGameHeader('Match Equivalentes')}
@@ -2325,19 +2382,22 @@ function initMatchingGame() {
             <p class="matching-instructions">Conecta cada fracción con su equivalente</p>
             <div class="matching-container">
                 <div class="matching-column left-column" id="leftColumn">
-                    ${leftItems.map((item, i) => `
-                        <div class="matching-item" data-value="${item}" data-pair="${equivalentPairs.find(p => p.left === item).right}" onclick="selectMatchItem(this, 'left')">
-                            ${formatFraction(item)}
-                        </div>
-                    `).join('')}
+                   ${leftItems.map((item) => {
+                       const pair = shuffledPairs.find(p => p.left === item);
+                       return `
+                           <div class="matching-item" data-value="${item}" data-pair="${pair.right}" onclick="selectMatchItem(this, 'left')">
+                               ${formatFraction(item)}
+                           </div>
+                       `;
+                   }).join('')}
                 </div>
                 <svg class="matching-lines" id="matchingLines"></svg>
                 <div class="matching-column right-column" id="rightColumn">
-                    ${rightItems.map((item, i) => `
-                        <div class="matching-item" data-value="${item}" onclick="selectMatchItem(this, 'right')">
-                            ${formatFraction(item)}
-                        </div>
-                    `).join('')}
+                   ${rightItems.map((item) => `
+                       <div class="matching-item" data-value="${item}" onclick="selectMatchItem(this, 'right')">
+                           ${formatFraction(item)}
+                       </div>
+                   `).join('')}
                 </div>
             </div>
         </div>
@@ -2350,6 +2410,7 @@ function initMatchingGame() {
 
 let selectedMatch = { left: null, right: null };
 let matchedCount = 0;
+let currentMatchingPairs = [];
 
 function formatFraction(str) {
     const [num, den] = str.split('/');
@@ -2376,7 +2437,7 @@ function checkMatch() {
     const expectedRight = selectedMatch.left.dataset.pair;
     const rightValue = selectedMatch.right.dataset.value;
     
-    if (expectedRight === rightValue) {
+    if (expectedRight === rightValue || areFractionsEquivalent(leftValue, rightValue)) {
         selectedMatch.left.classList.add('matched');
         selectedMatch.right.classList.add('matched');
         updateScore(200);
@@ -2390,7 +2451,7 @@ function checkMatch() {
         showQuickFeedback(`¡Par encontrado! ${leftValue} = ${rightValue}`, 200);
         matchedCount++;
         
-        if (matchedCount === 5) {
+        if (matchedCount === shuffledPairs.length) {
             setTimeout(() => {
                 document.getElementById('gameBody').innerHTML = renderGameOver(gameScore, '¡Todas las parejas!');
             }, 1000);
@@ -2659,13 +2720,21 @@ function generateSortingRound() {
         [{ num: 1, den: 3 }, { num: 1, den: 2 }, { num: 2, den: 3 }],
         [{ num: 1, den: 5 }, { num: 2, den: 5 }, { num: 4, den: 5 }],
         [{ num: 1, den: 6 }, { num: 1, den: 3 }, { num: 1, den: 2 }],
-        [{ num: 1, den: 8 }, { num: 1, den: 4 }, { num: 3, den: 8 }]
+        [{ num: 1, den: 8 }, { num: 1, den: 4 }, { num: 3, den: 8 }],
+        [{ num: 1, den: 10 }, { num: 2, den: 10 }, { num: 4, den: 5 }],
+        [{ num: 2, den: 6 }, { num: 1, den: 2 }, { num: 5, den: 6 }]
     ];
     
-    const set = fractionSets[Math.floor(Math.random() * fractionSets.length)];
+    const setKey = (set) => set.map(f => `${f.num}/${f.den}`).join('|');
+    const availableSets = fractionSets.filter(set => !recentSortingSetKeys.includes(setKey(set)));
+    if (availableSets.length === 0) {
+        recentSortingSetKeys = [];
+    }
+    const set = getRandomUniqueItem(fractionSets, recentSortingSetKeys, setKey) || fractionSets[0];
+    addRecentKey(recentSortingSetKeys, setKey(set), 6);
     correctOrder = set.map(f => `${f.num}/${f.den}`);
     
-    const shuffled = [...set].sort(() => Math.random() - 0.5);
+    const shuffled = shuffleArray(set);
     
     const container = document.getElementById('sortingContainer');
     container.innerHTML = shuffled.map((frac, i) => `
@@ -2795,12 +2864,20 @@ function generateComparison() {
         { num: 2, den: 3, value: 0.67 },
         { num: 3, den: 4, value: 0.75 },
         { num: 2, den: 5, value: 0.4 },
-        { num: 3, den: 5, value: 0.6 }
+        { num: 3, den: 5, value: 0.6 },
+        { num: 4, den: 5, value: 0.8 }
     ];
     
-    const shuffled = [...fractions].sort(() => Math.random() - 0.5);
+    const availableFractions = fractions.filter(f => !recentComparisonKeys.includes(`${f.num}/${f.den}`));
+    if (availableFractions.length < 2) {
+        recentComparisonKeys = [];
+    }
+
+    const shuffled = shuffleArray(availableFractions.length >= 2 ? availableFractions : fractions);
     comparisonFrac1 = shuffled[0];
     comparisonFrac2 = shuffled[1];
+    addRecentKey(recentComparisonKeys, `${comparisonFrac1.num}/${comparisonFrac1.den}`, 4);
+    addRecentKey(recentComparisonKeys, `${comparisonFrac2.num}/${comparisonFrac2.den}`, 4);
     
     comparisonCorrectSide = comparisonFrac1.value > comparisonFrac2.value ? 'left' : 'right';
     
@@ -3256,20 +3333,46 @@ function initClassifierGame() {
 }
 
 let classifierCurrentNumber = 0;
-let classifierCorrectBin = 0;
+let classifierCorrectBins = [];
+
+function getDivisibilityCriteria(number) {
+    const criteria = [];
+    if (number % 2 === 0) criteria.push(2);
+    if (number % 3 === 0) criteria.push(3);
+    if (number % 5 === 0) criteria.push(5);
+    return criteria;
+}
+
+function getClassifierCandidateNumber() {
+    const candidates = [];
+    for (let number = 10; number <= 100; number++) {
+        candidates.push(number);
+    }
+    return candidates[Math.floor(Math.random() * candidates.length)] || 10;
+}
+
+function getClassifierBinLabel(bin) {
+    const binNames = { 2: 'Divisible por 2', 3: 'Divisible por 3', 5: 'Divisible por 5', 0: 'Ninguno' };
+    return binNames[bin] || 'Ninguno';
+}
+
+function formatClassifierBins(bins) {
+    if (!bins || bins.length === 0) {
+        return getClassifierBinLabel(0);
+    }
+
+    if (bins.length === 1) {
+        return getClassifierBinLabel(bins[0]);
+    }
+
+    return bins.map(bin => getClassifierBinLabel(bin).replace('Divisible por ', '')).join(' y ');
+}
 
 function generateClassifierNumber() {
-    classifierCurrentNumber = Math.floor(Math.random() * 100) + 10;
-    
-    // Determinar el bin correcto (prioridad: 2, 3, 5, ninguno)
-    if (classifierCurrentNumber % 2 === 0) {
-        classifierCorrectBin = 2;
-    } else if (classifierCurrentNumber % 3 === 0) {
-        classifierCorrectBin = 3;
-    } else if (classifierCurrentNumber % 5 === 0) {
-        classifierCorrectBin = 5;
-    } else {
-        classifierCorrectBin = 0;
+    classifierCurrentNumber = getClassifierCandidateNumber();
+    classifierCorrectBins = getDivisibilityCriteria(classifierCurrentNumber);
+    if (classifierCorrectBins.length === 0) {
+        classifierCorrectBins = [0];
     }
     
     const numberEl = document.getElementById('classifierNumber');
@@ -3282,10 +3385,9 @@ function classifyNumber(bin) {
     // Generar explicaciones detalladas
     const digitSum = String(classifierCurrentNumber).split('').reduce((a, b) => parseInt(a) + parseInt(b), 0);
     const lastDigit = classifierCurrentNumber % 10;
+    const isCorrect = classifierCorrectBins.includes(bin);
     
-    const binNames = { 2: 'Divisible por 2', 3: 'Divisible por 3', 5: 'Divisible por 5', 0: 'Ninguno' };
-    
-    if (bin === classifierCorrectBin) {
+    if (isCorrect) {
         updateScore(70);
         
         let explanation = '';
@@ -3308,11 +3410,11 @@ function classifyNumber(bin) {
         updateScore(-20);
         
         let correctExplanation = '';
-        if (classifierCorrectBin === 2) {
+        if (classifierCorrectBins.includes(2)) {
             correctExplanation = `${classifierCurrentNumber} termina en ${lastDigit}, que es par. Por eso es divisible por 2.`;
-        } else if (classifierCorrectBin === 3) {
+        } else if (classifierCorrectBins.includes(3)) {
             correctExplanation = `Suma de dígitos = ${digitSum}. Como ${digitSum} es divisible por 3, el número también lo es.`;
-        } else if (classifierCorrectBin === 5) {
+        } else if (classifierCorrectBins.includes(5)) {
             correctExplanation = `${classifierCurrentNumber} termina en ${lastDigit}. Es divisible por 5.`;
         } else {
             correctExplanation = `${classifierCurrentNumber} no es divisible por 2 (no termina en par), ni por 3 (suma ${digitSum}), ni por 5 (no termina en 0 o 5).`;
@@ -3321,9 +3423,9 @@ function classifyNumber(bin) {
         showFeedbackModal({
             isCorrect: false,
             title: '¡Clasificación incorrecta!',
-            message: `<strong>${classifierCurrentNumber}</strong> pertenece a: <strong>${binNames[classifierCorrectBin]}</strong>`,
-            userAnswer: binNames[bin],
-            correctAnswer: binNames[classifierCorrectBin],
+            message: `<strong>${classifierCurrentNumber}</strong> pertenece a: <strong>${formatClassifierBins(classifierCorrectBins)}</strong>`,
+            userAnswer: getClassifierBinLabel(bin),
+            correctAnswer: formatClassifierBins(classifierCorrectBins),
             explanation: `Criterios de divisibilidad:<br>• Por 2: termina en 0, 2, 4, 6, 8<br>• Por 3: suma de dígitos divisible por 3<br>• Por 5: termina en 0 o 5<br><br>${correctExplanation}`,
             points: -20,
             autoClose: false,
@@ -3688,10 +3790,18 @@ function generateAreaQuestion() {
         { type: 'square', width: 4, height: 4, area: 16, color: '#9b59b6' },
         { type: 'rectangle', width: 2, height: 4, area: 8, color: '#1abc9c' },
         { type: 'rectangle', width: 6, height: 2, area: 12, color: '#e67e22' },
-        { type: 'rectangle', width: 3, height: 3, area: 9, color: '#34495e' }
+        { type: 'rectangle', width: 3, height: 3, area: 9, color: '#34495e' },
+        { type: 'rectangle', width: 4, height: 4, area: 16, color: '#34495e' }
     ];
     
-    const fig = figures[Math.floor(Math.random() * figures.length)];
+    const figureKey = (figure) => `${figure.type}-${figure.width}-${figure.height}-${figure.area}`;
+    const availableFigures = figures.filter(fig => !recentAreaKeys.includes(figureKey(fig)));
+    if (availableFigures.length === 0) {
+        recentAreaKeys = [];
+    }
+
+    const fig = getRandomUniqueItem(figures, recentAreaKeys, figureKey) || figures[0];
+    addRecentKey(recentAreaKeys, figureKey(fig), 5);
     correctArea = fig.area;
     
     // Dibujar figura con cuadrados unitarios más grandes y vistosos
@@ -3897,7 +4007,13 @@ function generateConversion() {
         }
     ];
     
-    const q = questions[Math.floor(Math.random() * questions.length)];
+    const availableQuestions = questions.filter(question => !recentConversionKeys.includes(question.question));
+    if (availableQuestions.length === 0) {
+        recentConversionKeys = [];
+    }
+
+    const q = getRandomUniqueItem(questions, recentConversionKeys, (question) => question.question) || questions[0];
+    addRecentKey(recentConversionKeys, q.question, 5);
     conversionCorrect = q.correct;
     conversionExplanation = q.explanation;
     
@@ -3921,9 +4037,11 @@ function generateConversion() {
 }
 
 function checkConversionAnswer(userAnswer) {
+    const normalizedUser = normalizeAnswer(userAnswer);
+    const normalizedCorrect = normalizeAnswer(conversionCorrect);
     const gameArea = document.querySelector('.converter-game');
     
-    if (userAnswer === conversionCorrect) {
+    if (normalizedUser === normalizedCorrect) {
         updateScore(100);
         
         showQuickFeedback('¡Excelente! 📐', 100);
@@ -3935,7 +4053,7 @@ function checkConversionAnswer(userAnswer) {
     } else {
         showFeedbackModal({
             isCorrect: false,
-            title: '¡Respuesta incorrecta!',
+            title: 'Ups, sigue intentando',
             message: `Tu respuesta: ${userAnswer}`,
             userAnswer: userAnswer,
             correctAnswer: conversionCorrect,

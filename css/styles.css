@@ -494,23 +494,28 @@ body {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(10px);
-    padding: var(--spacing-md) var(--spacing-lg);
-    border-radius: var(--border-radius-xl);
     font-size: 0.95rem;
     font-weight: 600;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    transition: all 0.3s;
+    cursor: default;
+    position: relative;
+    padding-left: var(--spacing-sm);
 }
 
-.feature-item:hover {
-    background: rgba(255, 255, 255, 0.35);
-    transform: translateY(-2px);
+.feature-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: calc(-1 * var(--spacing-lg) / 2 - 2px);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
 }
 
 .feature-item i {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
+    opacity: 0.9;
 }
 
 .welcome-illustration {
@@ -576,11 +581,12 @@ body {
     display: flex;
     align-items: center;
     gap: var(--spacing-lg);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
     border: 2px solid transparent;
+    border-left: 4px solid rgba(102, 126, 234, 0.35);
     position: relative;
     overflow: hidden;
+    cursor: default;
 }
 
 .stat-card::before {
@@ -592,12 +598,6 @@ body {
     bottom: 0;
     background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(240, 244, 255, 0.5) 100%);
     pointer-events: none;
-}
-
-.stat-card:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
-    border-color: rgba(102, 126, 234, 0.2);
 }
 
 .stat-icon {
@@ -1221,9 +1221,25 @@ body {
     transition: all var(--transition-fast);
 }
 
+.btn:disabled,
+.btn[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+    transform: none;
+    box-shadow: none;
+    filter: grayscale(0.1);
+}
+
 .btn-primary {
     background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     color: var(--white);
+}
+
+.btn-primary:disabled,
+.btn-primary[disabled] {
+    background: linear-gradient(135deg, var(--gray-400), var(--gray-500));
+    color: var(--gray-700);
 }
 
 .btn-primary:hover {
@@ -1239,6 +1255,12 @@ body {
 
 .btn-secondary:hover {
     background: var(--gray-300);
+}
+
+.btn-secondary:disabled,
+.btn-secondary[disabled] {
+    background: var(--gray-300);
+    color: var(--gray-600);
 }
 
 .btn-success {
@@ -2024,6 +2046,11 @@ body {
     .feature-item {
         width: 100%;
         justify-content: center;
+        padding-left: 0;
+    }
+
+    .feature-item::after {
+        display: none;
     }
     
     .math-icons {
@@ -2961,7 +2988,7 @@ body {
     display: flex;
     flex-direction: column;
 }
-
+ 
 .slides-container {
     flex: 1;
     display: flex;
@@ -2971,14 +2998,18 @@ body {
     border-radius: var(--border-radius-md);
     overflow: hidden;
     position: relative;
+    padding: var(--spacing-md);
 }
-
+ 
 .slides-container img {
+    display: block;
     max-width: 100%;
     max-height: 100%;
+    width: auto;
+    height: auto;
     object-fit: contain;
 }
-
+ 
 /* Diapositivas en modo horizontal para móviles */
 @media (max-height: 500px) and (orientation: landscape) {
     .content-modal {
@@ -3003,16 +3034,7 @@ body {
     
     .slides-container {
         flex: 1;
-        min-height: 0;
         height: 100%;
-    }
-    
-    .slides-container img {
-        max-width: 100%;
-        max-height: calc(100vh - 120px);
-        width: auto;
-        height: auto;
-        object-fit: contain;
     }
     
     .slides-thumbnails {
@@ -3051,6 +3073,197 @@ body {
     padding: var(--spacing-md) 0;
     overflow-x: auto;
     justify-content: center;
+}
+
+/* ================================
+   Animación "Inicio de Nivel" (estilo Candy Crush)
+   Transición al abrir Contenido o Juegos de un tema
+   ================================ */
+.level-intro {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.35s ease, visibility 0.35s ease;
+    overflow: hidden;
+}
+
+.level-intro.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.level-intro-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 45%, #f5576c 100%);
+    background-size: 200% 200%;
+}
+
+.level-intro.active .level-intro-bg {
+    animation: levelIntroGradient 1.4s ease forwards;
+}
+
+@keyframes levelIntroGradient {
+    0% { background-position: 0% 50%; opacity: 0; }
+    15% { opacity: 1; }
+    100% { background-position: 100% 50%; opacity: 1; }
+}
+
+.level-intro-particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.level-intro-particle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    font-size: 2.6rem;
+    color: rgba(255, 255, 255, 0.95);
+    opacity: 0;
+    will-change: transform, opacity;
+    filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.35));
+    animation-name: levelIntroParticle;
+    animation-timing-function: cubic-bezier(0.22, 0.9, 0.32, 1);
+    animation-fill-mode: forwards;
+}
+
+@keyframes levelIntroParticle {
+    0% {
+        transform: translate(-50%, -50%) translate(var(--tx-in), var(--ty-in)) scale(0) rotate(0deg);
+        opacity: 0;
+    }
+    28% {
+        /* Orbitan alrededor del contenido central sin cubrirlo */
+        transform: translate(-50%, -50%) translate(var(--tx-mid), var(--ty-mid)) scale(1.2) rotate(150deg);
+        opacity: 1;
+    }
+    60% {
+        transform: translate(-50%, -50%) translate(var(--tx-mid), var(--ty-mid)) scale(1) rotate(230deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) translate(var(--tx-out), var(--ty-out)) scale(0.5) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+.level-intro-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    color: var(--white);
+    padding: var(--spacing-lg);
+}
+
+.level-intro-icon {
+    width: 110px;
+    height: 110px;
+    margin: 0 auto var(--spacing-md);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    border: 3px solid rgba(255, 255, 255, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4), 0 10px 30px rgba(0, 0, 0, 0.25);
+    transform: scale(0);
+    opacity: 0;
+}
+
+.level-intro.active .level-intro-icon {
+    animation: levelIntroIconPop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s forwards,
+               levelIntroIconPulse 1.2s ease-out 0.85s;
+}
+
+@keyframes levelIntroIconPop {
+    0% { transform: scale(0) rotate(-30deg); opacity: 0; }
+    60% { transform: scale(1.15) rotate(8deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes levelIntroIconPulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.45), 0 10px 30px rgba(0, 0, 0, 0.25); }
+    100% { box-shadow: 0 0 0 40px rgba(255, 255, 255, 0), 0 10px 30px rgba(0, 0, 0, 0.25); }
+}
+
+.level-intro-badge {
+    display: inline-block;
+    padding: 0.35rem 1rem;
+    border-radius: var(--border-radius-full);
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: var(--spacing-sm);
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.level-intro.active .level-intro-badge {
+    animation: levelIntroFadeUp 0.5s ease 0.35s forwards;
+}
+
+.level-intro-title {
+    font-size: 2.4rem;
+    font-weight: 800;
+    margin-bottom: var(--spacing-sm);
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transform: scale(0.5);
+    filter: blur(4px);
+}
+
+.level-intro.active .level-intro-title {
+    animation: levelIntroTitleZoom 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.45s forwards;
+}
+
+@keyframes levelIntroTitleZoom {
+    0% { opacity: 0; transform: scale(0.5); filter: blur(4px); }
+    100% { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+
+.level-intro-subtitle {
+    font-size: 1.05rem;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.level-intro.active .level-intro-subtitle {
+    animation: levelIntroFadeUp 0.5s ease 0.65s forwards;
+}
+
+@keyframes levelIntroFadeUp {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 576px) {
+    .level-intro-icon {
+        width: 85px;
+        height: 85px;
+        font-size: 2.25rem;
+    }
+
+    .level-intro-title {
+        font-size: 1.75rem;
+    }
+
+    .level-intro-subtitle {
+        font-size: 0.95rem;
+    }
 }
 
 .slide-thumb {
